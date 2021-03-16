@@ -161,6 +161,7 @@ CurrentAC_ADC_NORM_Struct CURRENT_ADC_AC_IN_PHY_RMS;
 /*!Control Loop variables*/
 PFC_CTRL_t  pPFC_CTRL;                                          /*!< */
 PI_STRUCT_t pPI_VDC_CTRL;                                       /*!< */
+PI_STRUCT_t pPI_BUCK_BURST_CTRL;
 VOLTAGECTRL_Struct VOLTAGECTRL;                                 /*!< */
 CDC_Struct CDC;                                                 /*!< */
 INRUSH_STRUCT INRUSH_CTRL;                                      /*!< */
@@ -255,6 +256,7 @@ int main(void)
   DPC_PI_Init(&CDC.pPI_ID_CURR_CTRL,DPC_ID_KP,DPC_ID_KI,DPC_PI_ID_TS,DPC_PI_ID_sat_up,DPC_PI_ID_sat_down,DPC_PI_ID_SAT_EN,DPC_PI_ID_AW_EN,DPC_PI_ID_AWTG);                                              /// INIT PI CURRENT CTRL D
   DPC_PI_Init(&CDC.pPI_IQ_CURR_CTRL,DPC_IQ_KP,DPC_IQ_KI,DPC_PI_IQ_TS,DPC_PI_IQ_sat_up,DPC_PI_IQ_sat_down,DPC_PI_IQ_SAT_EN,DPC_PI_IQ_AW_EN,DPC_PI_IQ_AWTG);                                              /// INIT PI CURRENT CTRL Q
   DPC_PI_Init(&pPI_VDC_CTRL,DPC_VCTRL_KP,DPC_VCTRL_KI,DPC_PI_VDC_TS,DPC_VCTRL_PI_sat_up,DPC_VCTRL_PI_sat_down,DPC_VCTRL_PI_SAT_EN,DPC_VCTRL_PI_AW_EN,DPC_VCTRL_PI_AWTG);                                /// INIT PI VOLTAGE CTRL
+  DPC_PI_Init(&pPI_BUCK_BURST_CTRL,BUCK_VCTRL_KP,BUCK_VCTRL_KI,BUCK_PI_VDC_TS,BUCK_VCTRL_PI_sat_up,BUCK_VCTRL_PI_sat_down,BUCK_VCTRL_PI_SAT_EN,BUCK_VCTRL_PI_AW_EN,BUCK_VCTRL_PI_AWTG);
   DPC_LPCNTRL_CDC_Init(&CDC,DPC_PLL_OMEGAGRID,DPC_INDUCTOR,CDC_FF_Init,CDC_DEC_INIT,CDC_VDC_FF_INIT);
   DPC_LPCNTRL_BURST_Init(&BURST_CTRL,DPC_BURST_EN,RUN_BURST_VREF_V,RUN_BURST_VHIST,DPC_NO_LOAD_CURR,DPC_LOW_LOAD_CURR,DPC_BURST_DUTY_NL,DPC_BURST_DUTY_LL,&DPC_ADC_Conf);                               /// INIT BURST CONTROL
   DPC_LPCNTRL_BURST_Init(&STARTBURST_CTRL,DPC_STARTBURST_EN,STARTBURST_VREF_V,START_BURST_VHIST,DPC_START_NO_LOAD_CURR,DPC_START_LOW_LOAD_CURR,DPC_STARTBURST_DUTY,0,&DPC_ADC_Conf);                    /// INIT STARTBURST CONTROL
@@ -278,12 +280,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
-
-	  HAL_GPIO_WritePin(PFC_SW_SRC_GPIO_Port, PFC_SW_SRC_Pin, GPIO_PIN_SET);
-	  //DPC_FSM_Application();
-	  //DPC_PWM_OutEnable(&tDPC_PWM);
-	  //HAL_HRTIM_SimplePWMStart(&hhrtim1, &PWM_Tim1, HRTIM_OUTPUT_TA1);
+	// HAL_GPIO_WritePin(PFC_SW_SRC_GPIO_Port, PFC_SW_SRC_Pin, GPIO_PIN_SET);
   }
   /* USER CODE END 3 */
 }
@@ -713,127 +710,26 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	{
 		DATA_Acquisition_from_DMA(p_ADC1_Data,p_ADC2_Data); //Pass ADC DMA Data in DATA LAYER
 
-
 		//start READ variable from DATA LAYER
 		ADC_Current_AC_ProcessData((uint32_t*)Read_Curr_GRID(),&CURRENT_ADC_AC_IN_NORM);                    /// Read Current AC from DATA Layer and pass it at CURRENT_ADC_AC_IN_NORM
 		ADC_Current_AC_RAW_ProcessData((uint32_t*)Read_Curr_GRID(), &CURRENT_ADC_AC_IN_BITS);
 
-		ADC2Phy_Current_ProcessData(&DPC_ADC_Conf,(uint32_t*)Read_Curr_GRID(),&CURRENT_ADC_AC_IN_PHY);      /// Read Current AC from DATA Layer and pass it at CURRENT_ADC_AC_IN_PHY
-		ADC2Phy_RMS_Current_ProcessData(&CURRENT_ADC_AC_IN_PHY, &CURRENT_ADC_AC_IN_PHY_MIN, &CURRENT_ADC_AC_IN_PHY_MAX, &CURRENT_ADC_AC_IN_PHY_RMS, &Period_Counter);
-		//ADC2Phy_MA_Current_ProcessData(&DPC_ADC_Conf,(uint32_t*)Read_Curr_GRID(), &ADC_AC_Current_MA,&CURRENT_ADC_AC_MA_IN_PHY);
 
-		//end READ variable from DATA LAYER
-
-		Status_Load=DPC_MISC_Check_DCLoad(&DPC_Load,DC_Load_Limit,&CURRENT_ADC_AC_IN_PHY_RMS);
-		Status_Source=DPC_MISC_CHECK_AC_SOURCE(&AC_SOURCE,AC_Source_Limit,PLL_CONVERTER.pll_theta_out_2pi);  ///Check AC SOURCE state reading AC Voltage and curent
-
-		Iabc_temp=*((TRANSFORM_ABC_t*)&CURRENT_ADC_AC_IN_NORM);                                             /// Sensing Current
-		Iabc_Phy=*((TRANSFORM_ABC_t*)&CURRENT_ADC_AC_IN_PHY);                                               /// Sensing Current in Physical dimension
-
-		Run_ClarkePark(&Iabc_temp, DATA_Read_Theta_PLL(),PLL_CONVERTER.pll_phi_2pi,&Current_qdo);
-		//Run_ClarkePark(&Iabc_Phy, DATA_Read_Theta_PLL(),PLL_CONVERTER.pll_phi_2pi,&Current_qdo_Phy);
-
-		DATA_CURR_Write_ClarkePark(Current_qdo);  // Current qdo in DATA layer
-		//DATA_CURR_Write_ClarkePark(Current_qdo_Phy);  // Current qdo in DATA layer
-
-		//PC_State=FSM_Run;
-
-
-//		if (VOLTAGE_ADC_DC_IN_PHY.Vdc_tot>=360){
-//			HAL_GPIO_WritePin(GPIOA, Relay_Pin, GPIO_PIN_SET);
-//			Relay_state=1;
-//			if (Timeout[0]>5000){
-//
-//			}
-//		}
-//		else if (VOLTAGE_ADC_DC_IN_PHY.Vdc_tot<355){
-//			HAL_GPIO_WritePin(GPIOA, Relay_Pin, GPIO_PIN_RESET);
-//			Relay_state=0;
-//			Timeout[0]=0;
-//		}
-//		else {
-//			Timeout[0]=0;
-//		}
-
-		//PC_State=FSM_StartUp_burst;
-		//if (Status_Source!=OVERCURRENT_SOURCE) Status_Source=OK_SOURCE;
-//		if (Status_Source==OK_SOURCE && Relay_state==1 && PLL_Status==PLL_SYNC && Status_Load!=OVERCURRENT_LOAD
-//				&& Status_Load!=OVERVOLTAGE_CAP && Status_Load!=OVERVOLTAGE_LOAD){
-//			FSM_Run_State = Run_PFC_Mode;
-//			HAL_GPIO_WritePin(GPIOA, LED_HL1_Pin, GPIO_PIN_SET);
-//
-//		}
-//		else {
-//			FSM_Run_State = Run_Idle;
-//			HAL_GPIO_WritePin(GPIOA, LED_HL1_Pin, GPIO_PIN_RESET);
-//		}
-//
-		PC_State = FSM_Run;
-		FSM_Run_State = Run_PFC_Mode;
-
-		if (PC_State==FSM_Run)                                      ///__________FSM_Run________
-		{
-		  switch(FSM_Run_State){
-		  case Run_PFC_Mode:
-			DPC_LPCNTRL_PFC_Mode(&pPFC_CTRL,&pPI_VDC_CTRL,&VOLTAGECTRL,&CDC,&V_DQO_CTRL,&Current_qdo,&Voltage_qdo,&VOLTAGE_ADC_DC_IN_PHY); ///PFC CONTROL______
-			Run_Inv_ClarkePark(&V_DQO_CTRL,PLL_CONVERTER.pll_theta_out_2pi,PLL_CONVERTER.pll_phi_2pi,&V_ABC_CTRL);                                  /// DQO to ABC Voltag to provide to modulator
-			DPC_PWM_OutEnable(&tDPC_PWM);                                                                                                           ///PWM output will be enabled in PFC_Mode
-			HAL_GPIO_WritePin(PFC_SW_SRC_GPIO_Port, PFC_SW_SRC_Pin, GPIO_PIN_SET);
-			DPC_PWM_Send_Duty_SPWM(&tDPC_PWM,V_ABC_CTRL.axA,V_ABC_CTRL.axB,V_ABC_CTRL.axC,&DMA_HRTIM_SRC);                                                         ///MODULATOR
-			  break;
-		  case Run_Burst_Mode:
-			//DPC_LPCNTRL_Burst_Mode((uint32_t*)Read_Volt_DC(),&BURST_CTRL,(uint32_t*)Read_Curr_DC(),&tDPC_PWM);
-			DPC_LPCNTRL_Burst_Mode((uint32_t*)Read_Volt_DC(),&BURST_CTRL,&CURRENT_ADC_AC_IN_PHY_RMS,&tDPC_PWM, &DMA_HRTIM_SRC);
-			DPC_LPCNTRL_PFC_Mode_Reset(&pPI_VDC_CTRL,&CDC);
-			break;
-		  case Run_Idle:
-			//Idle_Mode();
+		if (VOLTAGE_ADC_DC_IN_PHY.Vdc_tot>BUCK_HIST_VDC_UP){
 			DPC_PWM_OutDisable();
-			DPC_LPCNTRL_PFC_Mode_Reset(&pPI_VDC_CTRL,&CDC);
-			break;
-		  }
 		}
-		else if (PC_State==FSM_StartUp_burst)                        ///__________FSM_StartUp_burst__________
-		{
-		  //DPC_LPCNTRL_Burst_Mode((uint32_t*)Read_Volt_DC(),&STARTBURST_CTRL,(uint32_t*)Read_Curr_DC(),&tDPC_PWM);
-		  DPC_LPCNTRL_Burst_Mode((uint32_t*)Read_Volt_DC(),&STARTBURST_CTRL,&CURRENT_ADC_AC_IN_PHY_RMS,&tDPC_PWM, &DMA_HRTIM_SRC);
-		  DPC_PWM_OutEnable(&tDPC_PWM);
-		  DPC_LPCNTRL_PFC_Mode_Reset(&pPI_VDC_CTRL,&CDC);
+		else if(VOLTAGE_ADC_DC_IN_PHY.Vdc_tot<=BUCK_HIST_VDC_UP && VOLTAGE_ADC_DC_IN_PHY.Vdc_tot>BUCK_HIST_VDC_DOWN){
+			DPC_LPCNTRL_Burst_PID_Mode((float) 400, &pPI_VDC_CTRL, &VOLTAGE_ADC_DC_IN_PHY, &DMA_HRTIM_SRC);
+			DPC_PWM_OutEnable(&tDPC_PWM);
 		}
-		else if(PC_State==FSM_Fault)                                ///FSM_Fault
-		{
-		  DPC_PWM_OutDisable();
-		  if(Trigger_Timestamp==SET){
-		  Timestamp_PLL_CONVERTER=PLL_CONVERTER;
-		  Trigger_Timestamp=RESET;
-		  }
+		else if (VOLTAGE_ADC_DC_IN_PHY.Vdc_tot<=BUCK_HIST_VDC_DOWN){
+			DPC_LPCNTRL_Burst_PID_Mode((float) 400, &pPI_BUCK_BURST_CTRL, &VOLTAGE_ADC_DC_IN_PHY, &DMA_HRTIM_SRC);
+			DPC_PWM_OutEnable(&tDPC_PWM);
 		}
-		if (Status_Source==OK_SOURCE){
-			Flag2=1;
-		}
-//		if (Service_step>=500){
-//			Service_step=0;
-//			if (Flag2==1){
-//				Service_step=0;
-//			}
 
-//		}
-//		if (DMA_HRTIM_SRC[0]!=0){
-//			DMA_HRTIM_DST[2]=1;
-//		}
+		//DPC_LPCNTRL_PFC_Mode(&pPFC_CTRL,&pPI_VDC_CTRL,&VOLTAGECTRL,&CDC,&V_DQO_CTRL,&Current_qdo,&Voltage_qdo,&VOLTAGE_ADC_DC_IN_PHY);
 
 
-//		Prev_Saturation = DMA_HRTIM_SRC[0];
-		Flag = __HAL_HRTIM_GET_FLAG(&hhrtim1,HRTIM_FLAG_FLT1);
-
-//		VOLTAGE_ADC_AC_IN_BITS.phA = (float)(Flag[0]);
-//		Service_data[0][Service_step] = DMA_HRTIM_SRC.phA;
-//		Service_data[1][Service_step] = DMA_HRTIM_SRC.phAB;
-//		Service_data[2][Service_step] = V_DQO_CTRL.axd;
-//		Service_data[3][Service_step] = DMA_HRTIM_SRC[0];
-
-		//Service_data[4][Service_step]=__HAL_HRTIM_GETCOMPARE(&PWM_Tim1,HRTIM_TIMERINDEX_TIMER_A,HRTIM_COMPAREUNIT_1);
-		//Service_step++;
 	}
 	else if(htim->Instance == TIM3){
 		TimeoutMng();
@@ -841,61 +737,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	}
 	else if(htim->Instance == TIM6){
 
-
-
-
-	//start READ variable from DATA LAYER
-	ADC_Voltage_AC_ProcessData((uint32_t*)Read_GRID(),&VOLTAGE_ADC_AC_IN_NORM);                         /// Read Voltage AC from DATA Layer and pass it at VOLTAGE_ADC_AC_IN_NORM
-	ADC_Voltage_DC_ProcessData((uint32_t*)Read_Volt_DC(),&VOLTAGE_ADC_DC_IN_NORM);                      /// Read Voltage DC from DATA Layer and pass it at VOLTAGE_ADC_DC_IN_NORM
-	//ADC_Current_DC_ProcessData((uint32_t*)Read_Curr_DC(),&CURRENT_ADC_DC_IN_NORM);                      /// Read Current DC from DATA Layer and pass it at CURRENT_ADC_DC_IN_NORM
-	ADC2Phy_DC_Voltage_ProcessData(&DPC_ADC_Conf,(uint32_t*)Read_Volt_DC(),&VOLTAGE_ADC_DC_IN_PHY);     /// Read Voltage AC from DATA Layer and pass it at VOLTAGE_ADC_AC_IN_PHY
-	ADC2Phy_Voltage_ProcessData(&DPC_ADC_Conf,(uint32_t*)Read_GRID(),&VOLTAGE_ADC_AC_IN_PHY);           /// Read Voltage DC from DATA Layer and pass it at VOLTAGE_ADC_DC_IN_PHY
-	//ADC2Phy_DC_Current_ProcessData(&DPC_ADC_Conf,(uint32_t*)Read_Curr_DC(),&CURRENT_ADC_DC_IN_PHY);     /// Read Current DC from DATA Layer and pass it at CURRENT_ADC_DC_IN_PHY
-	//Current_DC_Calc(&VOLTAGE_ADC_DC_IN_PHY, &VOLTAGE_ADC_AC_IN_PHY, &CURRENT_ADC_AC_IN_PHY, &CURRENT_ADC_DC_IN_PHY);
-	//end Send QD FRAME data in DATA Layer
-
-	if (Service_step>=1000){
-		Service_step=0;
-		Service_counter++;
-		if (Service_counter>=10){
-			Service_counter=0;
-		}
-//			if (Flag2==1){
-//				Service_step=0;
-//			}
-	}
-
-		Service_data[0][Service_step]=VOLTAGE_ADC_AC_IN_PHY.phA;
-		Service_data[1][Service_step]=CURRENT_ADC_AC_IN_PHY.phA;
-		Service_data[2][Service_step]=V_ABC_CTRL.axA;
-		Service_data[3][Service_step]=CURRENT_ADC_AC_IN_PHY_RMS.phC;
-		Service_data[4][Service_step]=CURRENT_ADC_AC_IN_PHY.phA;
-		Service_data[5][Service_step]=CURRENT_ADC_AC_IN_PHY.phB;
-		Service_data[6][Service_step]=CURRENT_ADC_AC_IN_PHY.phC;
-//
-//		Service_data[6][Service_step]=V_ABC_CTRL.axA;
-
-//		Service_data[8][Service_step]=V_ABC_CTRL.axC;
-
-	//start Auxiliary Data for Frame Transfrormation
-	Vabc_temp=*((TRANSFORM_ABC_t*)&VOLTAGE_ADC_AC_IN_NORM);                                             /// Sensing Voltage
-	Vabc_Phy=*((TRANSFORM_ABC_t*)&VOLTAGE_ADC_AC_IN_PHY);                                               /// Sensing Voltage in Physical dimension
-	//end Auxiliary Data for Frame Transfrormation
-
-	//start Frame Trasformation
-	Run_ClarkePark(&Vabc_temp, DATA_Read_Theta_PLL(),PLL_CONVERTER.pll_phi_2pi,&Voltage_qdo);
-	Run_ClarkePark(&Vabc_Phy, DATA_Read_Theta_PLL(),PLL_CONVERTER.pll_phi_2pi,&Voltage_qdo_Phy);        ///
-	//end Frame Trasformation
-
-	//start Send QD FRAME data in DATA Layer
-	DATA_VOLT_Write_ClarkePark(Voltage_qdo);                                                            /// Voltage qdo in DATA layer
-	//end Send QD FRAME data in DATA Layer
-
-	VOLTAGE_AC_qd_IN_NORM=*((VoltageAC_qd_PLL_Struct*)&Voltage_qdo);                                    ///Auxiliary Data for PLL
-	PLL_Status=DPC_PLL_pllqd_Run(&PLL_CONVERTER,&VOLTAGE_AC_qd_IN_NORM,&theta_out_pll,&omega_out_pll);  ///PLL Phase Extimation
-	DATA_Write_Theta_PLL(PLL_CONVERTER.pll_theta_out_2pi);                                              ///Pass Theta to DATA LAYER
-
-	Service_step++;
+		ADC2Phy_DC_Voltage_ProcessData(&DPC_ADC_Conf,(uint32_t*)Read_Volt_DC(),&VOLTAGE_ADC_DC_IN_PHY);     /// Read Voltage AC from DATA Layer and pass it at VOLTAGE_ADC_AC_IN_PHY
+		VOLTAGE_ADC_DC_IN_PHY.Vdc_tot = 0;
 	}
 
 }

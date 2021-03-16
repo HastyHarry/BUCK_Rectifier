@@ -25,3 +25,4 @@ DPC_PWMConverter.c:1581:6:Send_Duty_2LC_SPWM_LUT	16	static
 DPC_PWMConverter.c:1598:6:Send_Duty_2LC_SPWM_OPT	24	static
 DPC_PWMConverter.c:1617:6:Send_Duty_2LC_SPWM	32	static
 DPC_PWMConverter.c:1637:6:VIENNA_MOD_VCTRL	24	static
+DPC_PWMConverter.c:1668:6:DPC_PWM_Send_Duty_BUCK	48	static

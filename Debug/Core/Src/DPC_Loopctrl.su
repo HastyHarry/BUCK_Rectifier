@@ -11,3 +11,4 @@ DPC_Loopctrl.c:641:6:DPC_LPCNTRL_Inrush_Init	40	static
 DPC_Loopctrl.c:685:6:DPC_LPCNTRL_CDC_Init	24	static
 DPC_Loopctrl.c:724:6:DPC_Relay_Init	16	static
 DPC_Loopctrl.c:744:6:DPC_LPCNTRL_PFC_Init	32	static
+DPC_Loopctrl.c:764:6:DPC_LPCNTRL_Burst_PID_Mode	32	static

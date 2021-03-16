@@ -154,18 +154,32 @@
 #define DPC_PI_IQ_TS                    ((float)1/RefreshTime_DESIDERED)                /*!< Discrete time step of the PI regulator related to q-axis */
 #define DPC_PI_VDC_TS                   ((float)1/RefreshTime_DESIDERED)                /*!< Discrete time step of the PI regulator related to DC voltage control */
 #define DPC_PLL_TS                      ((float)1/RefreshTime2_DESIDERED)               /*!< PLL - Task time step [expressed in sec]*/
+#define BUCK_PI_VDC_TS                   ((float)1/RefreshTime_DESIDERED)
 
 ///DPC VCTRL Define of STDESPFCBIDIR
 #define DPC_VCTRL_KP                    4E-4                                            /*!< VCTRL - Proportional gain of the PI regulator related to DC voltage control*/
 #define DPC_VCTRL_KI                    0.3                                             /*!< VCTRL - Integral gain of the PI regulator related to DC voltage control*/
-#define DPC_PFC_VDC                     DPC_PFC_VDC_OUT                                 /*!< VCTRL - DC Voltage referance value of the PFC [Expresed in Volt]*/
+#define DPC_PFC_VDC                     400                                 /*!< VCTRL - DC Voltage referance value of the PFC [Expresed in Volt]*/
 #define DPC_PFC_Iref_sat                10//22                                              /*!< VCTRL - d-q axis AC Current referance limit of the PFC [Expresed in AMPs]*/
 #define DPC_VCTRL_PI_AWTG               0.02                                            /*!< VCTRL - Anti Wind-up GAIN*/
-#define DPC_VCTRL_PI_sat_up             ((float)DPC_PFC_Iref_sat/(float)G_IAC)          /*!< VCTRL - Higher Current Referance Saturation LIMIT*/
+#define DPC_VCTRL_PI_sat_up             0.3          									/*!< VCTRL - Higher Current Referance Saturation LIMIT*/
 #define DPC_VCTRL_PI_sat_down           0                                               /*!< VCTRL - Lower Current Referance Saturation LIMIT*/
 #define DPC_VCTRL_PI_SAT_EN             SET                                             /*!< VCTRL - Current Referance Saturation Enable*/
 #define DPC_VCTRL_PI_AW_EN              SET                                             /*!< VCTRL - Anti Wind-up Enable*/
 
+//Burst mode BUCK params
+#define BUCK_VCTRL_KP                   4E-4                                            /*!< VCTRL - Proportional gain of the PI regulator related to DC voltage control*/
+#define BUCK_VCTRL_KI                   0.3                                             /*!< VCTRL - Integral gain of the PI regulator related to DC voltage control*/
+#define BUCK_PFC_VDC                    400                                 /*!< VCTRL - DC Voltage referance value of the PFC [Expresed in Volt]*/
+#define BUCK_PFC_Iref_sat               10//22                                              /*!< VCTRL - d-q axis AC Current referance limit of the PFC [Expresed in AMPs]*/
+#define BUCK_VCTRL_PI_AWTG              0.02                                            /*!< VCTRL - Anti Wind-up GAIN*/
+#define BUCK_VCTRL_PI_sat_up            0.1          									/*!< VCTRL - Higher Current Referance Saturation LIMIT*/
+#define BUCK_VCTRL_PI_sat_down          0                                               /*!< VCTRL - Lower Current Referance Saturation LIMIT*/
+#define BUCK_VCTRL_PI_SAT_EN            SET                                             /*!< VCTRL - Current Referance Saturation Enable*/
+#define BUCK_VCTRL_PI_AW_EN             SET                                             /*!< VCTRL - Anti Wind-up Enable*/
+
+#define BUCK_HIST_VDC_UP				410
+#define BUCK_HIST_VDC_DOWN				390
 
 ///DPC CDC Define of STDESPFCBIDIR
 #if defined(DPC_AC_3W)                  ///DPC CDC Define of STDESPFCBIDIR for 3-Wire connection

@@ -114,9 +114,9 @@ void ADC2Phy_DC_Voltage_ProcessData(DPC_ADC_Conf_TypeDef *DPC_ADC_Conf,uint32_t*
   float invG_Vdc=DPC_ADC_Conf->invG_Vdc;
   
   VOLTAGE_ADC_DC_IN_NORM_Sub->Vdc_pos=((float)((int16_t)p_Data_Sub[0]-B_Vdc)*(float)(invG_Vdc)); 
-  VOLTAGE_ADC_DC_IN_NORM_Sub->Vdc_neg=((float)((int16_t)p_Data_Sub[1]-100)*(float)(invG_Vdc));
-  VOLTAGE_ADC_DC_IN_NORM_Sub->Vdc_tot=VOLTAGE_ADC_DC_IN_NORM_Sub->Vdc_pos+VOLTAGE_ADC_DC_IN_NORM_Sub->Vdc_neg;
-  
+  //VOLTAGE_ADC_DC_IN_NORM_Sub->Vdc_neg=((float)((int16_t)p_Data_Sub[1]-100)*(float)(invG_Vdc));
+  //VOLTAGE_ADC_DC_IN_NORM_Sub->Vdc_tot=VOLTAGE_ADC_DC_IN_NORM_Sub->Vdc_pos+VOLTAGE_ADC_DC_IN_NORM_Sub->Vdc_neg;
+  VOLTAGE_ADC_DC_IN_NORM_Sub->Vdc_tot=VOLTAGE_ADC_DC_IN_NORM_Sub->Vdc_pos;
 }  
 
   

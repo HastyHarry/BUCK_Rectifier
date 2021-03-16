@@ -1665,4 +1665,40 @@ else
 }
 
 
+void DPC_PWM_Send_Duty_BUCK(float VA, DMA_PWMDUTY_STRUCT* DMA_SRC)
+{
+
+  if(VA>1){VA=1;}
+  else if(VA<-1){VA=-1;}
+
+  uint32_t dutyMaxLim;
+  uint32_t dutyMinLim;
+  float Max_Duty;
+  float Min_Duty;
+  uint16_t PWM_PERIOD_COUNTER_INT;
+  PWM_PERIOD_COUNTER_INT=__HAL_HRTIM_GETPERIOD(&PWM_Tim1, HRTIM_TIMERINDEX_TIMER_A);
+
+  float VApos;
+  uint32_t dutyVApos;
+  VApos=VA;
+
+  Min_Duty = 0.01;
+  Max_Duty = 0.3;
+
+  dutyMinLim = Min_Duty * PWM_PERIOD_COUNTER_INT;
+  dutyMaxLim = Max_Duty * PWM_PERIOD_COUNTER_INT;
+
+  dutyVApos=(uint32_t)(VApos*PWM_PERIOD_COUNTER_INT);
+
+  if(dutyVApos>=dutyMaxLim){
+	  dutyVApos=dutyMaxLim;
+  }
+  else if(dutyVApos<=dutyMinLim){
+	  dutyVApos=dutyMinLim;
+  }
+
+  DMA_SRC->phA=dutyVApos;
+}
+
+
 

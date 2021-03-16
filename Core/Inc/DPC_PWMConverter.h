@@ -172,4 +172,5 @@ void DPC_PWM_Init(uint32_t  BURST_PWM_Freq_Desidered,uint32_t  PWM_Freq_Desidere
 void DPC_ConfigDeadTime(TIM_HandleTypeDef *htim_HS_AS,TIM_HandleTypeDef *htim_LS_DS,uint32_t Deadtime);
 uint8_t DPC_Calc_DTG(float DT_TimeVal);
 void DPC_Calc_DTG_Range(float DT_TimeVal, float t_tim_ket_ck);
+void DPC_PWM_Send_Duty_BUCK(float VA, DMA_PWMDUTY_STRUCT* DMA_SRC);
 #endif /* __DPC_PWMCONVERTER_H */

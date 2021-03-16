@@ -255,15 +255,15 @@ void DATA_Acquisition_from_DMA(uint32_t* p_ADC1_Data,uint32_t* p_ADC2_Data)
 
 
 //T_ext=p_ADC2_Data[2];//////
-  T_int=p_ADC1_Data[7];//////
+//  T_int=p_ADC1_Data[7];//////
   //AC Side Voltage
-  VAC_ADC.phA=p_ADC1_Data[2];
+  /*VAC_ADC.phA=p_ADC1_Data[2];
   VAC_ADC.phB=p_ADC1_Data[3];
-  VAC_ADC.phC=p_ADC1_Data[4];
+  VAC_ADC.phC=p_ADC1_Data[4];*/
   //AC Side Current                           
 
   //Simulating Current
-  if (p_ADC1_Data[2]>B_VAC){
+  /*if (p_ADC1_Data[2]>B_VAC){
 	  temp_IA_u = p_ADC1_Data[2]-B_VAC;
 	  temp_IA_f = ((float)temp_IA_u * 0.3);
 	  IAC_ADC.phA = (uint32_t)temp_IA_f + B_IAC;
@@ -285,7 +285,7 @@ void DATA_Acquisition_from_DMA(uint32_t* p_ADC1_Data,uint32_t* p_ADC2_Data)
 	  IAC_ADC.phB =  B_IAC - (uint32_t)temp_IB_f;
   }
 
-  IAC_ADC.phC = B_IAC - ((IAC_ADC.phA - B_IAC) + (IAC_ADC.phB - B_IAC));
+  IAC_ADC.phC = B_IAC - ((IAC_ADC.phA - B_IAC) + (IAC_ADC.phB - B_IAC));*/
 
 
 //  IAC_ADC.phA=p_ADC1_Data[0];
@@ -298,7 +298,7 @@ void DATA_Acquisition_from_DMA(uint32_t* p_ADC1_Data,uint32_t* p_ADC2_Data)
   //IDC_ADC.IDC_adc=p_ADC1_Data[3];
   //VDC                         
   VDC_ADC.Vdc_pos=p_ADC1_Data[5];
-  VDC_ADC.Vdc_neg=4096-p_ADC1_Data[6];
+//  VDC_ADC.Vdc_neg=4096-p_ADC1_Data[6];
 //#elif NUCLEO_3TTC
 //  //AC Side
 //  VAC_ADC.phA=p_ADC1_Data[0];
